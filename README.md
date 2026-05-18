@@ -269,3 +269,6 @@ The local SDK is published as `@shaurya2k06/dctsdk` version 1.1.0 and is consume
 - `docs/LOCAL_DEV.md` for the Anvil workflow.
 - `contracts/README.md` for deployment and upgrades.
 - `contracts/DELEGATION_FRAMEWORK.md` for the MetaMask delegation caveat setup.
+
+
+*This was a collaborative project for a hackathon*
