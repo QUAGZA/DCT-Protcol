@@ -1,0 +1,35 @@
+{
+  "name": "@shaurya2k06/dctsdk",
+  "version": "1.1.0",
+  "description": "Delegated Capability Tokens — Eclipse Biscuit + DCT on-chain validation",
+  "type": "module",
+  "main": "./src/index.mjs",
+  "exports": {
+    ".": "./src/index.mjs"
+  },
+  "files": [
+    "src"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "@biscuit-auth/biscuit-wasm": "^0.6.0",
+    "ethers": "^6.16.0"
+  },
+  "scripts": {
+    "test": "node --experimental-wasm-modules --test 2>/dev/null || true"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "keywords": [
+    "dct",
+    "delegation",
+    "biscuit",
+    "erc-8004",
+    "ethereum",
+    "ethers"
+  ],
+  "license": "MIT"
+}

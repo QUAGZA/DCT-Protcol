@@ -1,0 +1,17 @@
+{
+  "name": "@dct/contracts",
+  "version": "1.0.0",
+  "private": true,
+  "description": "DCT Protocol Solidity — Foundry",
+  "scripts": {
+    "build": "forge build",
+    "test": "forge test",
+    "fmt": "forge fmt",
+    "export-abis": "node scripts/export-abis.mjs",
+    "deploy:local": "forge script script/DeployDCT.s.sol:DeployDCT --rpc-url http://127.0.0.1:8545 --broadcast",
+    "deploy:baseSepolia": "bash scripts/deploy-base-sepolia.sh",
+    "deploy:baseSepolia:verify": "bash scripts/deploy-base-sepolia.sh --verify",
+    "deploy:caveat": "forge script script/DeployDCTCaveat.s.sol:DeployDCTCaveat --rpc-url \"$BASE_SEPOLIA_RPC_URL\" --broadcast"
+  },
+  "license": "MIT"
+}

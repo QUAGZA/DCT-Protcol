@@ -1,0 +1,39 @@
+# TLSNotary local stack — notary + WebSocket→TCP proxy for TLS proving setups.
+#
+#   docker compose -f docker-compose.tlsn.yml up -d
+#
+# Starts:
+#   • notary — ghcr.io/tlsnotary/tlsn/notary-server:v0.1.0-alpha.12 → http://127.0.0.1:7047
+#   • wstcp  — WebSocket proxy → example.com:443 on ws://127.0.0.1:55688
+#
+# Point `TLSN_NOTARY_URL` / your prover at the notary. The Vite `/tlsn` page uses
+# `POST /api/tlsn/prove` + `TLSN_PROVER_URL` (see README). wstcp is for tooling that
+# needs a browser-side WebSocket tunnel to TCP (e.g. upstream browser extensions).
+
+services:
+  notary:
+    image: ghcr.io/tlsnotary/tlsn/notary-server:v0.1.0-alpha.12
+    platform: linux/amd64
+    container_name: dct-notary
+    ports:
+      - "7047:7047"
+    environment:
+      - RUST_LOG=info
+    volumes:
+      - ./docker/tlsn/notary-config.yaml:/app/config/config.yaml:ro
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://localhost:7047/info"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  wstcp:
+    build:
+      context: ./docker/tlsn/wstcp
+    container_name: dct-wstcp
+    ports:
+      - "55688:55688"
+    # Default tunnel target: https://example.com/ (change host:port for other sites)
+    command: ["--bind-addr", "0.0.0.0:55688", "example.com:443"]
+    restart: unless-stopped
