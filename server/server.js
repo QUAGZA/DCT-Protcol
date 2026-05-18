@@ -44,6 +44,42 @@ app.use("/api/layer", layerWorkflowRoutes);
 // Demo-facing API surface (health checks + endpoint aliases)
 app.use("/api", demoApiRoutes);
 
+// Internal Dev Prover Route for Vercel Serverless
+app.post("/api/tlsn-dev-prover/prove", async (req, res) => {
+  try {
+    const { url, method = "GET", headers = {}, body } = req.body || {};
+    if (!url) return res.status(400).json({ error: "url is required" });
+
+    let statusCode = 200;
+    let responsePreview = "";
+    try {
+      const r = await fetch(url, {
+        method,
+        headers: typeof headers === "object" && headers ? headers : {},
+        body: body && (method === "POST" || method === "PUT" || method === "PATCH") ? body : undefined,
+        signal: AbortSignal.timeout(15_000),
+      });
+      statusCode = r.status;
+      responsePreview = (await r.text()).slice(0, 800);
+    } catch (e) {
+      statusCode = 0;
+      responsePreview = `fetch failed: ${e.message}`;
+    }
+
+    const payload = { url, method, statusCode, responsePreview, fetchedAt: new Date().toISOString() };
+    const dataHex = Buffer.from(JSON.stringify(payload), "utf8").toString("hex");
+    const notaryUrl = process.env.TLSN_NOTARY_URL || "https://notary.pse.dev";
+
+    res.json({
+      version: "0.1",
+      data: dataHex,
+      meta: { notaryUrl, backend: "vercel-internal-prover" },
+      url, method, statusCode, responsePreview,
+      notarySignatureHex: "0x", backend: "vercel-internal-prover"
+    });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
 // ── SSE: real-time on-chain event stream ─────────────────────────────────────
 // GET /api/events — Server-Sent Events; subscribes to DCTRegistry + DCTEnforcer.
 // Clients: const es = new EventSource('/api/events');
@@ -151,17 +187,21 @@ async function start() {
     );
   }
 
-  app.listen(PORT, () => {
-    console.log(`\n═══════════════════════════════════════════`);
-    console.log(`  DCT Protocol Server — Port ${PORT}`);
-    console.log(`═══════════════════════════════════════════`);
-    console.log(`  Biscuit:  Eclipse Biscuit WASM v0.6.0`);
-    const rpcLabel = rpcConfigLabel();
-    console.log(`  Chain:    ${rpcLabel}`);
-    console.log(`  SDK:      delegate() · execute() · revoke()`);
-    console.log(`  API:      http://localhost:${PORT}`);
-    console.log(`═══════════════════════════════════════════\n`);
-  });
+  if (process.env.NODE_ENV !== "production" && !process.env.VERCEL) {
+    app.listen(PORT, () => {
+      console.log(`\n═══════════════════════════════════════════`);
+      console.log(`  DCT Protocol Server — Port ${PORT}`);
+      console.log(`═══════════════════════════════════════════`);
+      console.log(`  Biscuit:  Eclipse Biscuit WASM v0.6.0`);
+      const rpcLabel = rpcConfigLabel();
+      console.log(`  Chain:    ${rpcLabel}`);
+      console.log(`  SDK:      delegate() · execute() · revoke()`);
+      console.log(`  API:      http://localhost:${PORT}`);
+      console.log(`═══════════════════════════════════════════\n`);
+    });
+  }
 }
 
 start();
+
+export default app;
